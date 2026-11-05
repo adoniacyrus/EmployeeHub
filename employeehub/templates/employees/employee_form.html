@@ -1,0 +1,196 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-10 col-xl-9">
+        <!-- Top Nav / Back Link -->
+        <div class="mb-3">
+            <a href="{% url 'employees:employee_list' %}" class="text-decoration-none text-muted small fw-semibold">
+                <i class="bi bi-arrow-left me-1"></i> Back to Personnel Directory
+            </a>
+        </div>
+
+        <div class="surface-card">
+            <div class="surface-card-header">
+                <div>
+                    <h2 class="surface-card-title">
+                        <i class="bi {% if is_edit %}bi-pencil-square text-primary{% else %}bi-person-plus-fill text-primary{% endif %} me-2"></i>
+                        {{ title }}
+                    </h2>
+                    <p class="surface-card-subtitle">
+                        {% if is_edit %}
+                        Update workforce profile details for {{ employee.full_name }} (ID #{{ employee.id }})
+                        {% else %}
+                        Register new employee credentials, operational assignment, and compensation profile.
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+
+            <div class="surface-card-body p-4">
+                <form method="POST" novalidate>
+                    {% csrf_token %}
+
+                    {% if form.non_field_errors %}
+                    <div class="toast-alert toast-alert-error mb-4">
+                        {% for error in form.non_field_errors %}
+                        <div><i class="bi bi-exclamation-triangle-fill me-2"></i> {{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <!-- Section 1: Personal Profile -->
+                    <div class="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom">
+                        <i class="bi bi-person-badge text-primary fs-5"></i>
+                        <span class="fw-bold text-dark">1. Personal Profile</span>
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-12 col-md-6">
+                            <label for="{{ form.full_name.id_for_label }}" class="form-label-custom">
+                                Legal Full Name <span class="text-danger">*</span>
+                            </label>
+                            {{ form.full_name }}
+                            {% if form.full_name.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.full_name.errors %}{{ error }}{% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <label for="{{ form.email.id_for_label }}" class="form-label-custom">
+                                Work Email Address <span class="text-danger">*</span>
+                            </label>
+                            {{ form.email }}
+                            {% if form.email.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.email.errors %}{{ error }}{% endfor %}
+                            </div>
+                            {% else %}
+                            <span class="text-muted smaller">Corporate communication address.</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <label for="{{ form.phone.id_for_label }}" class="form-label-custom">
+                                Primary Phone Number <span class="text-danger">*</span>
+                            </label>
+                            {{ form.phone }}
+                            {% if form.phone.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.phone.errors %}{{ error }}{% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <label for="{{ form.gender.id_for_label }}" class="form-label-custom">
+                                Gender <span class="text-danger">*</span>
+                            </label>
+                            {{ form.gender }}
+                            {% if form.gender.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.gender.errors %}{{ error }}{% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Section 2: Organizational Assignment -->
+                    <div class="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom">
+                        <i class="bi bi-briefcase text-primary fs-5"></i>
+                        <span class="fw-bold text-dark">2. Organizational Assignment</span>
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-12 col-md-6">
+                            <label for="{{ form.department.id_for_label }}" class="form-label-custom">
+                                Business Unit / Department <span class="text-danger">*</span>
+                            </label>
+                            {{ form.department }}
+                            {% if form.department.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.department.errors %}{{ error }}{% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <label for="{{ form.designation.id_for_label }}" class="form-label-custom">
+                                Official Job Designation <span class="text-danger">*</span>
+                            </label>
+                            {{ form.designation }}
+                            {% if form.designation.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.designation.errors %}{{ error }}{% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <label for="{{ form.joining_date.id_for_label }}" class="form-label-custom">
+                                Effective Date of Joining <span class="text-danger">*</span>
+                            </label>
+                            {{ form.joining_date }}
+                            {% if form.joining_date.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.joining_date.errors %}{{ error }}{% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <label for="{{ form.salary.id_for_label }}" class="form-label-custom">
+                                Monthly Gross Salary (USD) <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light text-muted">$</span>
+                                {{ form.salary }}
+                            </div>
+                            {% if form.salary.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.salary.errors %}{{ error }}{% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Section 3: Residential Address -->
+                    <div class="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom">
+                        <i class="bi bi-geo-alt text-primary fs-5"></i>
+                        <span class="fw-bold text-dark">3. Residential Address</span>
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-12">
+                            <label for="{{ form.address.id_for_label }}" class="form-label-custom">
+                                Primary Residence / Mailing Address
+                            </label>
+                            {{ form.address }}
+                            {% if form.address.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.address.errors %}{{ error }}{% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-flex justify-content-end align-items-center gap-2 pt-3 border-top">
+                        <a href="{% url 'employees:employee_list' %}" class="btn-secondary-custom">
+                            Cancel
+                        </a>
+                        <button type="submit" class="btn-primary-custom">
+                            <i class="bi {% if is_edit %}bi-check-circle{% else %}bi-plus-circle{% endif %}"></i>
+                            {% if is_edit %}Update Employee Profile{% else %}Confirm & Onboard Employee{% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

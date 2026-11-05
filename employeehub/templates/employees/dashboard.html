@@ -1,0 +1,244 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Greeting & Header Row -->
+    <div class="portal-hero">
+        <div class="portal-title-row">
+            <div>
+                <h1 class="portal-title">Workforce Overview</h1>
+                <p class="portal-subtitle">Real-time personnel statistics, department allocations, and onboarding activity.</p>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="portal-date-badge">
+                    <i class="bi bi-calendar3 text-primary"></i> {% now "F j, Y" %}
+                </span>
+                <a href="{% url 'employees:employee_create' %}" class="btn-primary-custom">
+                    <i class="bi bi-plus-lg"></i> Add Employee
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4 High-End Metric Cards -->
+    <div class="row g-3 mb-4">
+        <!-- Metric 1: Total Workforce -->
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">TOTAL HEADCOUNT</span>
+                    <div class="metric-icon-box metric-icon-blue">
+                        <i class="bi bi-people-fill"></i>
+                    </div>
+                </div>
+                <div class="metric-value">{{ total_employees }}</div>
+                <div class="metric-footer">
+                    <span class="status-pill-active">Active Staff</span>
+                    <span class="text-muted ms-auto">100% verified</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Metric 2: Active Departments -->
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">DIVISIONS ACTIVE</span>
+                    <div class="metric-icon-box metric-icon-violet">
+                        <i class="bi bi-building"></i>
+                    </div>
+                </div>
+                <div class="metric-value">{{ total_departments }}</div>
+                <div class="metric-footer">
+                    <span class="pill-trend-neutral">
+                        <i class="bi bi-check-circle-fill"></i> Operational
+                    </span>
+                    <span class="text-muted ms-auto">6 configured</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Metric 3: Recent Hires -->
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">RECENT ONBOARDINGS</span>
+                    <div class="metric-icon-box metric-icon-emerald">
+                        <i class="bi bi-person-check-fill"></i>
+                    </div>
+                </div>
+                <div class="metric-value">{{ recent_employees|length }}</div>
+                <div class="metric-footer">
+                    <span class="pill-trend-up">
+                        <i class="bi bi-arrow-up-right"></i> Current cycle
+                    </span>
+                    <span class="text-muted ms-auto">Latest hires</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Metric 4: Payroll Budget -->
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">MONTHLY PAYROLL</span>
+                    <div class="metric-icon-box metric-icon-amber">
+                        <i class="bi bi-currency-dollar"></i>
+                    </div>
+                </div>
+                <div class="metric-value">${{ total_payroll|floatformat:0 }}</div>
+                <div class="metric-footer">
+                    <span class="text-muted">Avg: <strong>${{ avg_salary|floatformat:0 }}</strong>/mo</span>
+                    <span class="text-muted ms-auto">Gross</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="row g-4 mb-4">
+        <!-- Left: Recent Onboardings Table -->
+        <div class="col-12 col-lg-8">
+            <div class="surface-card h-100">
+                <div class="surface-card-header">
+                    <div>
+                        <h2 class="surface-card-title">Recent Onboardings</h2>
+                        <p class="surface-card-subtitle">Staff members recently added to the organization</p>
+                    </div>
+                    <a href="{% url 'employees:employee_list' %}" class="btn-secondary-custom">
+                        View Directory ({{ total_employees }}) <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+
+                <div class="p-0">
+                    {% if recent_employees %}
+                    <div class="table-responsive">
+                        <table class="table-enterprise">
+                            <thead>
+                                <tr>
+                                    <th>EMPLOYEE</th>
+                                    <th>DEPARTMENT</th>
+                                    <th>DESIGNATION</th>
+                                    <th>JOINING DATE</th>
+                                    <th>STATUS</th>
+                                    <th class="text-end">ACTIONS</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for emp in recent_employees %}
+                                <tr>
+                                    <td>
+                                        <div class="emp-profile-cell">
+                                            <div class="emp-avatar avatar-color-{{ forloop.counter0 }}">
+                                                {{ emp.full_name|slice:":1"|upper }}
+                                            </div>
+                                            <div>
+                                                <a href="{% url 'employees:employee_detail' emp.id %}" class="emp-name-text">
+                                                    {{ emp.full_name }}
+                                                </a>
+                                                <div class="emp-email-text">{{ emp.email }}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="dept-pill dept-{{ emp.department|lower }}">
+                                            {{ emp.department }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="fw-semibold text-dark">{{ emp.designation }}</span>
+                                    </td>
+                                    <td class="text-muted small">
+                                        {{ emp.joining_date|date:"M j, Y" }}
+                                    </td>
+                                    <td>
+                                        <span class="status-pill-active">Active</span>
+                                    </td>
+                                    <td class="text-end">
+                                        <div class="action-buttons-group">
+                                            <a href="{% url 'employees:employee_detail' emp.id %}" class="table-action-btn" title="View Profile">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            <a href="{% url 'employees:employee_update' emp.id %}" class="table-action-btn" title="Edit">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <a href="{% url 'employees:employee_delete' emp.id %}" class="table-action-btn delete" title="Delete">
+                                                <i class="bi bi-trash"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <div class="text-muted mb-2"><i class="bi bi-person-x fs-1"></i></div>
+                        <h5 class="fw-bold text-dark">No Active Employees</h5>
+                        <p class="text-muted small mb-3">Begin by onboarding your first employee into the directory.</p>
+                        <a href="{% url 'employees:employee_create' %}" class="btn-primary-custom">
+                            <i class="bi bi-plus-lg"></i> Onboard Employee
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Department Distribution & Workforce Highlights -->
+        <div class="col-12 col-lg-4">
+            <div class="surface-card h-100 d-flex flex-column">
+                <div class="surface-card-header">
+                    <div>
+                        <h2 class="surface-card-title">Department Allocation</h2>
+                        <p class="surface-card-subtitle">Workforce distribution across business units</p>
+                    </div>
+                </div>
+
+                <div class="surface-card-body flex-grow-1">
+                    {% if dept_distribution %}
+                    <div class="dept-progress-list mb-4">
+                        {% for item in dept_distribution %}
+                        <div class="dept-stat-row">
+                            <div class="dept-stat-info">
+                                <span class="dept-stat-name">{{ item.department }}</span>
+                                <span class="dept-stat-count">{{ item.count }} staff ({{ item.count|floatformat:0 }})</span>
+                            </div>
+                            <div class="custom-progress-track">
+                                <div class="custom-progress-fill" style="width: {% widthratio item.count total_employees 100 %}%;"></div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center my-4 small">No department data recorded yet.</p>
+                    {% endif %}
+
+                    <!-- Professional HR Insights Card -->
+                    <div class="p-3 bg-light rounded-3 border">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="bi bi-shield-check text-primary fs-5"></i>
+                            <span class="fw-bold text-dark small">Operations Summary</span>
+                        </div>
+                        <div class="d-flex justify-content-between small text-muted py-1 border-bottom">
+                            <span>Employment Model</span>
+                            <span class="fw-semibold text-dark">Full-Time Regular</span>
+                        </div>
+                        <div class="d-flex justify-content-between small text-muted py-1 border-bottom">
+                            <span>Compensation Cycle</span>
+                            <span class="fw-semibold text-dark">Monthly (Calendar)</span>
+                        </div>
+                        <div class="d-flex justify-content-between small text-muted py-1">
+                            <span>Personnel Audit Status</span>
+                            <span class="fw-semibold text-success"><i class="bi bi-check-circle-fill me-1"></i>Verified</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

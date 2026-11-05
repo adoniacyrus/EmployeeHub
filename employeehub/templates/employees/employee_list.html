@@ -1,0 +1,214 @@
+{% extends 'base.html' %}
+
+{% block title %}Employee Directory{% endblock %}
+
+{% block content %}
+<div class="directory-container">
+    <!-- Top Header -->
+    <div class="portal-hero">
+        <div class="portal-title-row">
+            <div>
+                <h1 class="portal-title">Personnel Directory</h1>
+                <p class="portal-subtitle">Browse, search, and manage corporate employee records.</p>
+            </div>
+            <div>
+                <a href="{% url 'employees:employee_create' %}" class="btn-primary-custom">
+                    <i class="bi bi-person-plus-fill"></i> Add New Employee
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search & Filter Bar -->
+    <div class="surface-card mb-4 p-3">
+        <form method="GET" action="{% url 'employees:employee_list' %}" class="row g-2 align-items-center">
+            <!-- Search Bar -->
+            <div class="col-12 col-md-5">
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0 text-muted">
+                        <i class="bi bi-search"></i>
+                    </span>
+                    <input type="text" name="q" class="form-control border-start-0 bg-light" 
+                           placeholder="Filter by name, email, or designation..." 
+                           value="{{ search_query }}">
+                </div>
+            </div>
+
+            <!-- Department Dropdown -->
+            <div class="col-12 col-sm-6 col-md-4">
+                <select name="department" class="form-select bg-light">
+                    <option value="">All Business Units</option>
+                    {% for code, label in department_choices %}
+                    <option value="{{ code }}" {% if selected_dept == code %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="col-12 col-sm-6 col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-primary flex-grow-1" style="background-color: var(--primary); border-color: var(--primary);">
+                    <i class="bi bi-funnel me-1"></i> Apply
+                </button>
+                {% if search_query or selected_dept %}
+                <a href="{% url 'employees:employee_list' %}" class="btn btn-outline-secondary" title="Reset Filters">
+                    <i class="bi bi-arrow-counterclockwise"></i>
+                </a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
+    <!-- Table Container Card -->
+    <div class="surface-card">
+        <div class="surface-card-header">
+            <div class="d-flex align-items-center gap-2">
+                <h2 class="surface-card-title">Employees</h2>
+                <span class="badge bg-light text-dark border rounded-pill">{{ total_filtered_count }} record{{ total_filtered_count|pluralize }}</span>
+                {% if search_query %}
+                <span class="text-muted small">&bull; Matching "<strong>{{ search_query }}</strong>"</span>
+                {% endif %}
+                {% if selected_dept %}
+                <span class="text-muted small">&bull; Unit: <strong>{{ selected_dept }}</strong></span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="p-0">
+            {% if employees %}
+            <div class="table-responsive">
+                <table class="table-enterprise">
+                    <thead>
+                        <tr>
+                            <th style="width: 70px;">ID</th>
+                            <th>EMPLOYEE</th>
+                            <th>CONTACT</th>
+                            <th>DEPARTMENT</th>
+                            <th>DESIGNATION</th>
+                            <th>JOINED</th>
+                            <th>STATUS</th>
+                            <th class="text-end" style="width: 130px;">ACTIONS</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for emp in employees %}
+                        <tr>
+                            <td class="fw-bold text-muted small">#{{ emp.id }}</td>
+                            <td>
+                                <div class="emp-profile-cell">
+                                    <div class="emp-avatar avatar-color-{{ forloop.counter0 }}">
+                                        {{ emp.full_name|slice:":1"|upper }}
+                                    </div>
+                                    <div>
+                                        <a href="{% url 'employees:employee_detail' emp.id %}" class="emp-name-text">
+                                            {{ emp.full_name }}
+                                        </a>
+                                        <div class="emp-email-text">{{ emp.email }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="small text-muted"><i class="bi bi-telephone me-1"></i>{{ emp.phone }}</span>
+                            </td>
+                            <td>
+                                <span class="dept-pill dept-{{ emp.department|lower }}">
+                                    {{ emp.department }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="fw-semibold text-dark">{{ emp.designation }}</span>
+                            </td>
+                            <td class="text-muted small">
+                                {{ emp.joining_date|date:"M j, Y" }}
+                            </td>
+                            <td>
+                                <span class="status-pill-active">Active</span>
+                            </td>
+                            <td class="text-end">
+                                <div class="action-buttons-group">
+                                    <a href="{% url 'employees:employee_detail' emp.id %}" class="table-action-btn" title="View Profile">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{% url 'employees:employee_update' emp.id %}" class="table-action-btn" title="Edit">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a href="{% url 'employees:employee_delete' emp.id %}" class="table-action-btn delete" title="Delete">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination Bar -->
+            {% if page_obj.has_other_pages %}
+            <div class="d-flex justify-content-between align-items-center p-3 border-top">
+                <span class="text-muted small">
+                    Showing page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                </span>
+                <nav aria-label="Directory pagination">
+                    <ul class="pagination pagination-sm mb-0">
+                        {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if selected_dept %}&department={{ selected_dept }}{% endif %}">
+                                &laquo; Prev
+                            </a>
+                        </li>
+                        {% else %}
+                        <li class="page-item disabled"><span class="page-link">&laquo; Prev</span></li>
+                        {% endif %}
+
+                        {% for num in page_obj.paginator.page_range %}
+                            {% if page_obj.number == num %}
+                            <li class="page-item active"><span class="page-link" style="background-color: var(--primary); border-color: var(--primary);">{{ num }}</span></li>
+                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}{% if search_query %}&q={{ search_query }}{% endif %}{% if selected_dept %}&department={{ selected_dept }}{% endif %}">{{ num }}</a>
+                            </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if selected_dept %}&department={{ selected_dept }}{% endif %}">
+                                Next &raquo;
+                            </a>
+                        </li>
+                        {% else %}
+                        <li class="page-item disabled"><span class="page-link">Next &raquo;</span></li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+            {% endif %}
+
+            {% else %}
+            <!-- Empty State -->
+            <div class="text-center py-5">
+                <div class="text-muted mb-2"><i class="bi bi-search fs-1"></i></div>
+                <h5 class="fw-bold text-dark">No Records Found</h5>
+                <p class="text-muted small mb-3">
+                    {% if search_query or selected_dept %}
+                    No employee records match the selected search or filter parameters.
+                    {% else %}
+                    No personnel profiles currently exist in the database.
+                    {% endif %}
+                </p>
+                <div class="d-flex justify-content-center gap-2">
+                    {% if search_query or selected_dept %}
+                    <a href="{% url 'employees:employee_list' %}" class="btn-secondary-custom">
+                        <i class="bi bi-x-circle"></i> Clear Filters
+                    </a>
+                    {% endif %}
+                    <a href="{% url 'employees:employee_create' %}" class="btn-primary-custom">
+                        <i class="bi bi-plus-lg"></i> Onboard Employee
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
